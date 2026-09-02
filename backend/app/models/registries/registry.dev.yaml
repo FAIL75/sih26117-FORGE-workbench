@@ -1,5 +1,4 @@
 # HARDWARE PROFILE: DEV (4GB VRAM)
-# We use the tiny 0.5b model just for fast routing, and 3b for actual work.
 
 models:
   router:
@@ -11,5 +10,10 @@ models:
     task_tags: ["general", "qa"]
   
   code:
-    id: qwen2.5:3b  # (For the actual SIH presentation, swap this to qwen2.5-coder:3b)
+    id: qwen2.5:3b
     task_tags: ["code_generation"]
+    
+  # NEW: Added vision model to the registry
+  vision:
+    id: moondream
+    task_tags: ["ocr", "vision"]

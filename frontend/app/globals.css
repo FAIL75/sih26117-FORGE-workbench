@@ -1,0 +1,42 @@
+/* app/globals.css */
+@import "tailwindcss";
+
+:root {
+  /* System Tokens */
+  --color-base: #0A0B0D;
+  --color-panel: #111317;
+  --color-primary: #F1EFEA;
+  --color-muted: #7C8089;
+  --color-faint: #4A4D54;
+  
+  /* Accents */
+  --color-accent-copper: #C2793A;
+  --color-risk-low: #4A9B6E;
+  --color-risk-med: #D9A441;
+  --color-risk-high: #C24A3A;
+}
+
+body {
+  background-color: var(--color-base);
+  color: var(--color-primary);
+  /* Prevent horizontal layout shifts during scroll animations */
+  overflow-x: hidden;
+  /* Premium typography rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Global reduced motion override - enforced at the lowest level */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-delay: -1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    background-attachment: initial !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
+}

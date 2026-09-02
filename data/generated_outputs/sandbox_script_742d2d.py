@@ -1,0 +1,3 @@
+from parser import parse_key_findings
+key_findings_summary = parse_key_findings('The image shows a computer screen displaying the Google search bar. The search bar is filled with a pink background, and the Google logo is prominently displayed at the top. The search bar is open, and the search box is empty, indicating that the user has not yet entered any search terms. The screen also shows a green button, which could be used to initiate the search process. The image does not contain any text or other objects, and the focus is solely on the Google search bar and its features.')
+write_file(filename='key_findings_summary.txt', content=key_findings_summary)

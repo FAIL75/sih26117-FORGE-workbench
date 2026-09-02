@@ -1,0 +1,4 @@
+MRPL CONFIDENTIAL - PIPELINE SAFETY SOP v2.4
+1. If the pipeline pressure exceeds 400 PSI, operators must immediately close Valve A-12.
+2. The emergency override code for the control room is "DELTA-77-ECHO".
+3. Routine maintenance for carbon steel pipes must be logged in the Alpha System every 14 days.

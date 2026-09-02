@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forge Workbench | SIH26117 Scenarios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        base: "#0B0C0E", panel: "#111214", line: "#202225",
+                        primary: "#F3F1EC", muted: "#77797E", muted2: "#4B4D52",
+                        copper: "#C2793A", riskLow: "#4A9B6E", riskHigh: "#C24A3A"
+                    },
+                    fontFamily: {
+                        sans: ['"IBM Plex Sans"', 'sans-serif'],
+                        mono: ['"IBM Plex Mono"', 'monospace'],
+                        display: ['"Space Grotesk"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: #0B0C0E; color: #F3F1EC; cursor: none; -webkit-font-smoothing: antialiased; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #202225; }
+        
+        #cursor {
+            position: fixed; top: 0; left: 0; width: 20px; height: 20px; 
+            border: 1px solid #C2793A; border-radius: 50%; pointer-events: none; z-index: 9999; 
+            transform: translate(-50%, -50%); mix-blend-mode: difference;
+            transition: width 0.2s, height 0.2s, background 0.2s, opacity 0.2s;
+        }
+        #cursor.big { width: 64px; height: 64px; background: #C2793A; mix-blend-mode: normal; opacity: 0.15; }
+        .gsap-reveal { opacity: 0; }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col font-sans text-sm selection:bg-copper selection:text-base">
+
+    <div id="cursor"></div>
+
+    <!-- Top Navigation -->
+    <header class="gsap-reveal h-[72px] border-b border-line bg-base flex items-center justify-between px-8 shrink-0 relative z-10">
+        <div class="flex items-center gap-6 font-mono text-[11px] tracking-[0.02em]">
+            <a href="index.html" class="interactable font-sans font-semibold text-[14px] tracking-normal hover:text-copper transition-colors">FORGE // WORKBENCH</a>
+            <div class="h-4 w-px bg-line"></div>
+            <div class="flex items-center gap-3">
+                <div class="w-2.5 h-2.5 rounded-full bg-riskHigh animate-pulse shadow-[0_0_8px_#C24A3A]"></div>
+                <span class="text-muted">MRPL TERMINAL // AIR-GAPPED</span>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-5">
+            <select id="scenarioSelect" class="interactable bg-base border border-line text-copper font-mono text-[11px] px-3 py-2 rounded-md outline-none focus:border-copper cursor-none appearance-none pr-8 relative">
+                <option value="rag">SCENARIO 1: AGENTIC RAG & DOCGEN</option>
+                <option value="vision">SCENARIO 2: MULTIMODAL OCR SCAN</option>
+                <option value="code">SCENARIO 3: AIR-GAPPED CODE SANDBOX</option>
+            </select>
+            
+            <button id="demoBtn" class="interactable px-5 py-2.5 border border-line hover:border-copper text-muted hover:text-copper transition-colors font-mono text-[11px] rounded-full flex items-center gap-2">
+                RUN DEMO <span class="text-[14px] leading-none">→</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 flex overflow-hidden">
+        
+        <!-- Left Sidebar: Audit & Trace -->
+        <aside class="gsap-reveal w-[340px] border-r border-line bg-base flex flex-col shrink-0 relative z-0">
+            <div class="p-8 border-b border-line">
+                <div class="flex justify-between items-end mb-6">
+                    <h3 class="font-display font-semibold text-lg tracking-tight">Egress Audit</h3>
+                    <span class="text-[10px] font-mono px-2 py-1 border border-riskLow/30 bg-riskLow/10 text-riskLow rounded-full">SECURE</span>
+                </div>
+                <div class="h-28 border border-line bg-panel flex flex-col items-center justify-center relative overflow-hidden">
+                    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#7C8089_1px,transparent_1px)] [background-size:12px_12px]"></div>
+                    <div class="text-4xl font-display font-bold text-riskLow drop-shadow-[0_0_8px_rgba(74,155,110,0.3)] relative z-10">0 B/s</div>
+                    <div class="text-[10px] font-mono text-muted mt-2 relative z-10">EXTERNAL PACKETS</div>
+                </div>
+                <div class="mt-4 text-[10px] font-mono text-muted leading-relaxed space-y-1">
+                    <p class="text-riskHigh">&gt; iptables DROP 0.0.0.0/0</p>
+                    <p>&gt; Localhost (127.0.0.1) ALLOWED</p>
+                </div>
+            </div>
+            <div class="flex-1 p-8 flex flex-col overflow-hidden">
+                <h3 class="font-display font-semibold text-lg tracking-tight mb-6">Agent Trace</h3>
+                <div id="traceLog" class="flex-1 overflow-y-auto font-mono text-[11px] space-y-4 pr-3">
+                    <div class="text-muted">System initialized. Awaiting input...</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Right Main: Chat & Output -->
+        <section class="gsap-reveal flex-1 flex flex-col bg-panel relative z-0">
+            <div id="chatHistory" class="flex-1 overflow-y-auto p-12 space-y-10"></div>
+            <div class="p-8 border-t border-line bg-base">
+                <div class="max-w-4xl mx-auto">
+                    <div class="border border-line bg-panel p-2 flex items-end focus-within:border-copper transition-colors">
+                        <textarea id="promptInput" rows="2" class="interactable w-full bg-transparent resize-none outline-none p-3 font-sans text-[15px] text-primary placeholder-muted" placeholder="Instruct the Forge Agent..."></textarea>
+                    </div>
+                    <div class="mt-3 flex gap-4 text-[10px] font-mono text-muted2">
+                        <span>PROFILE: DEV (4GB VRAM)</span> | <span>TOOLS: [execute_python, search_kb, generate_docx, vision_ocr]</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const cursor = document.getElementById("cursor");
+        window.addEventListener("mousemove", e => gsap.to(cursor, {x: e.clientX, y: e.clientY, duration: 0.15, ease: "power2.out"}));
+        document.querySelectorAll(".interactable, button, select").forEach(el => {
+            el.addEventListener("mouseenter", () => cursor.classList.add("big"));
+            el.addEventListener("mouseleave", () => cursor.classList.remove("big"));
+        });
+
+        gsap.timeline()
+            .to("header.gsap-reveal", { opacity: 1, duration: 0.8, ease: "power2.out" })
+            .to("aside.gsap-reveal", { opacity: 1, x: 0, duration: 0.8, ease: "power3.out" }, "-=0.6")
+            .from("aside.gsap-reveal", { x: -30 }, "<")
+            .to("section.gsap-reveal", { opacity: 1, duration: 0.8, ease: "power2.out" }, "-=0.4");
+
+        const demoBtn = document.getElementById('demoBtn');
+        const scenarioSelect = document.getElementById('scenarioSelect');
+        const traceLog = document.getElementById('traceLog');
+        const chatHistory = document.getElementById('chatHistory');
+        const promptInput = document.getElementById('promptInput');
+
+        const addTrace = (msg, isHighlight = false, isWarning = false) => {
+            const div = document.createElement('div');
+            let colorClass = isHighlight ? 'text-copper' : (isWarning ? 'text-riskHigh' : 'text-primary');
+            div.className = `flex gap-3 ${colorClass} opacity-0 translate-y-2`;
+            div.innerHTML = `<span class="opacity-40 shrink-0">${new Date().toISOString().split('T')[1].slice(0,8)}</span> <span class="flex-1 leading-relaxed">${msg}</span>`;
+            traceLog.appendChild(div);
+            gsap.to(div, { opacity: 1, y: 0, duration: 0.3, ease: "power1.out" });
+            traceLog.scrollTop = traceLog.scrollHeight;
+        };
+
+        const addChat = (sender, msg, attachment = null) => {
+            const div = document.createElement('div');
+            div.className = `flex gap-6 max-w-[85%] opacity-0 translate-y-4 ${sender === 'User' ? 'ml-auto flex-row-reverse' : ''}`;
+            const avatar = sender === 'User' 
+                ? `<div class="w-10 h-10 border border-line bg-base text-muted flex items-center justify-center shrink-0 font-mono text-[11px]">U</div>`
+                : `<div class="w-10 h-10 border border-copper/30 bg-copper/10 text-copper flex items-center justify-center shrink-0 font-display font-bold">AI</div>`;
+            
+            let attachHtml = attachment ? `<div class="mb-4 p-3 border border-dashed border-line rounded bg-base/50 flex items-center gap-3"><div class="w-8 h-8 bg-copper/20 text-copper flex items-center justify-center rounded">📄</div><span class="font-mono text-[11px] text-muted">${attachment}</span></div>` : '';
+
+            div.innerHTML = `
+                ${avatar}
+                <div class="flex-1 space-y-3 ${sender === 'User' ? 'text-right' : ''}">
+                    <div class="font-mono text-[11px] uppercase tracking-wide ${sender === 'User' ? 'text-muted' : 'text-copper'}">${sender}</div>
+                    <div class="text-[15px] leading-[1.7] ${sender === 'User' ? 'text-muted' : 'text-primary border border-line bg-base p-6'}">
+                        ${attachHtml}
+                        ${msg}
+                    </div>
+                </div>
+            `;
+            chatHistory.appendChild(div);
+            gsap.to(div, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" });
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        };
+
+        const scenarios = {
+            rag: {
+                prompt: "Find the emergency override code in the safety SOPs, and generate a formal Word document with the result.",
+                logic: () => {
+                    addTrace('[task_classifier] Intent: RAG_DOC_GEN');
+                    addTrace('Constraint: DEV Profile (4GB VRAM) active.', false, true);
+                    setTimeout(() => {
+                        addTrace('[swap_manager] Evicting router (qwen2.5:0.5b)...');
+                        addTrace('[swap_manager] Loading qwen2.5:3b sequentially...', true);
+                        setTimeout(() => {
+                            addTrace('Call: search_knowledge_base');
+                            addTrace('Executing CPU embeddings (all-MiniLM-L6-v2)...');
+                            setTimeout(() => {
+                                addTrace('Found 1 chunk in ChromaDB (mrpl_safety_sop.txt)');
+                                addTrace('Call: generate_docx_report', true);
+                                addTrace('Writing to Air-Gapped folder: Emergency_Code.docx');
+                                setTimeout(() => {
+                                    addTrace('Task Complete.');
+                                    addChat('Forge Agent', `
+                                        <strong>Code:</strong> DELTA-77-ECHO<br>
+                                        <strong>Source:</strong> mrpl_safety_sop.txt<br><br>
+                                        Report saved to: <code class="font-mono text-[12px] bg-line px-2 py-1 mt-2 inline-block">data/generated_outputs/Emergency_Code.docx</code>
+                                    `);
+                                    demoBtn.disabled = false; demoBtn.classList.remove('opacity-50');
+                                }, 1500);
+                            }, 1500);
+                        }, 1500);
+                    }, 1000);
+                }
+            },
+            vision: {
+                prompt: "Read the scanned inspection diagram attached. Extract the key physical measurements and structural anomalies.",
+                attachment: "pipeline_inspection_scan_v2.png",
+                logic: () => {
+                    addTrace('[task_classifier] Intent: MULTIMODAL_VISION');
+                    setTimeout(() => {
+                        addTrace('[swap_manager] Evicting router (qwen2.5:0.5b)...');
+                        addTrace('[swap_manager] Loading moondream (Vision) into VRAM...', true);
+                        setTimeout(() => {
+                            addTrace('👁️ Analyzing image: pipeline_inspection_scan_v2.png');
+                            addTrace('CPU OCR Fallback: PaddleOCR triggered for text extraction.', false, true);
+                            setTimeout(() => {
+                                addTrace('Visual features extracted. Evicting Moondream...');
+                                addTrace('[swap_manager] Loading qwen2.5:3b for reasoning...', true);
+                                setTimeout(() => {
+                                    addTrace('Task Complete.');
+                                    addChat('Forge Agent', `
+                                        Based on the offline vision analysis of the scanned document:<br><br>
+                                        <ul class="list-disc pl-4 space-y-2 text-muted">
+                                            <li><strong class="text-primary">Measurements:</strong> Outer radius is 0.5m, thickness is 0.02m.</li>
+                                            <li><strong class="text-riskHigh">Anomalies:</strong> Micro-fractures detected near Valve B (Coordinate: 45.2, 11.9).</li>
+                                        </ul>
+                                    `);
+                                    demoBtn.disabled = false; demoBtn.classList.remove('opacity-50');
+                                }, 1500);
+                            }, 2000);
+                        }, 1500);
+                    }, 1000);
+                }
+            },
+            code: {
+                prompt: "Write and execute a Python script to calculate the structural pressure threshold (hoop stress) for the pipeline. Outer radius = 0.5m, thickness = 0.02m, yield stress = 250 MPa.",
+                logic: () => {
+                    addTrace('[task_classifier] Intent: CODE_EXECUTION');
+                    setTimeout(() => {
+                        addTrace('[swap_manager] Evicting router (qwen2.5:0.5b)...');
+                        addTrace('[swap_manager] Loading qwen2.5-coder:3b into VRAM...', true);
+                        setTimeout(() => {
+                            addTrace('Call: execute_python_code');
+                            addTrace('⚙️ Spawning isolated Docker container (sandbox_667e14)...', true);
+                            addTrace('🛡️ Constraints enforced: --network=none, --memory=256m', false, true);
+                            setTimeout(() => {
+                                addTrace('Executing script inside sandbox...');
+                                addTrace('Output: 2.45 MPa');
+                                setTimeout(() => {
+                                    addTrace('Task Complete.');
+                                    addChat('Forge Agent', `
+                                        I executed the following code inside the air-gapped sandbox:<br>
+                                        <div class="bg-base border border-line p-3 mt-3 rounded font-mono text-[11px] text-muted whitespace-pre">
+R = 0.5
+t = 0.02
+yield_stress = 250
+hoop_stress = lambda P: (P * R) / (2 * (R - t))
+critical_pressure = 250 * (2 * (0.5 - 0.02)) / 0.5
+print(f"{critical_pressure} MPa")
+                                        </div><br>
+                                        <strong>Result:</strong> The critical internal pressure threshold is <strong class="text-copper">2.45 MPa</strong>.
+                                    `);
+                                    demoBtn.disabled = false; demoBtn.classList.remove('opacity-50');
+                                }, 1500);
+                            }, 2000);
+                        }, 1500);
+                    }, 1000);
+                }
+            }
+        };
+
+        const runDemo = () => {
+            demoBtn.disabled = true; demoBtn.classList.add('opacity-50');
+            const scenarioId = scenarioSelect.value;
+            const scenario = scenarios[scenarioId];
+            
+            gsap.to([chatHistory, traceLog], { opacity: 0, duration: 0.3, onComplete: () => {
+                chatHistory.innerHTML = ''; traceLog.innerHTML = '';
+                gsap.set([chatHistory, traceLog], { opacity: 1 });
+                
+                promptInput.value = "";
+                let i = 0;
+                let typeInterval = setInterval(() => {
+                    promptInput.value += scenario.prompt.charAt(i); i++;
+                    if (i >= scenario.prompt.length) {
+                        clearInterval(typeInterval);
+                        setTimeout(() => {
+                            promptInput.value = '';
+                            addChat('User', scenario.prompt, scenario.attachment);
+                            addTrace('Received prompt. Invoking router model...', true);
+                            scenario.logic();
+                        }, 600);
+                    }
+                }, 20);
+            }});
+        };
+
+        demoBtn.addEventListener('click', runDemo);
+    </script>
+</body>
+</html>

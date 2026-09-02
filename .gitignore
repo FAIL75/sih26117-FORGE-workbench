@@ -1,0 +1,76 @@
+# ==============================
+# Python
+# ==============================
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ==============================
+# Node / Frontend
+# ==============================
+node_modules/
+.next/
+frontend/dist/
+frontend/build/
+.turbo/
+*.tsbuildinfo
+
+# ==============================
+# Model weights - NEVER commit these (multi-GB, use registry.yaml + README instructions instead)
+# ==============================
+models/weights/
+*.gguf
+*.bin
+*.safetensors
+*.pt
+*.onnx
+ollama/
+
+# ==============================
+# Runtime / generated data
+# ==============================
+data/uploads/
+data/generated_outputs/
+data/audit_logs/
+knowledge_base/vector_store/
+knowledge_base/raw_docs/*
+!knowledge_base/raw_docs/.gitkeep
+knowledge_base/sample_reports/*
+!knowledge_base/sample_reports/.gitkeep
+
+# ==============================
+# Env / secrets
+# ==============================
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# ==============================
+# Docker
+# ==============================
+*.log
+
+# ==============================
+# OS / Editor
+# ==============================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# ==============================
+# Vector DB / local storage
+# ==============================
+qdrant_storage/
+chroma_data/

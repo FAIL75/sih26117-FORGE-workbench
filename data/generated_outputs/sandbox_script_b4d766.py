@@ -1,1 +1,0 @@
-code := read_file('emergency_override_code.txt', 'r') write_file('Emergency Procedure.docx', 'Emergency Procedure', code)

@@ -1,1 +1,0 @@
-write_file('Emergency Procedure.docx', 'Emergency Override Code: 1234', '')

@@ -1,1 +1,0 @@
-result = '2. The emergency override code for the control room is "DELTA-77-ECHO"'; write_file('emergency_code.txt', result)

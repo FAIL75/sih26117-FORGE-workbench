@@ -74,3 +74,5 @@ Thumbs.db
 # ==============================
 qdrant_storage/
 chroma_data/
+"data/audit_logs/" 
+"data/vector_db/" 

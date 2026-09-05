@@ -76,3 +76,6 @@ qdrant_storage/
 chroma_data/
 "data/audit_logs/" 
 "data/vector_db/" 
+data/vector_db/ 
+data/audit_logs/ 
+data/generated_outputs/ 

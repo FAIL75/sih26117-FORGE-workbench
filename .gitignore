@@ -79,3 +79,23 @@ chroma_data/
 data/vector_db/ 
 data/audit_logs/ 
 data/generated_outputs/ 
+
+# Ignore runtime data, logs, and generated outputs
+data/generated_outputs/*
+data/audit_logs/*
+data/sandbox_workspace/*
+data/uploads/*
+data/vector_db/*
+
+# Except for .gitkeep files (optional, keeps folders in repo)
+!data/**/.gitkeep
+
+# Ignore all data directories anywhere in the project
+**/data/generated_outputs/*
+**/data/audit_logs/*
+**/data/sandbox_workspace/*
+**/data/uploads/*
+**/data/vector_db/*
+
+# Ignore ChromaDB specific files
+*.sqlite3

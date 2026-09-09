@@ -82,7 +82,7 @@ export default function DocumentScrollSequence() {
         
         {loadedCount < frameCount && (
           <div className="absolute top-8 z-30 font-mono text-xs text-white/80 bg-black/40 px-4 py-2 rounded-full backdrop-blur border border-white/10">
-            BUFFERING SOVEREIGN ENCLAVE: {Math.round((loadedCount / frameCount) * 100)}%
+            BUFFERING FORGE SECURE NODE: {Math.round((loadedCount / frameCount) * 100)}%
           </div>
         )}
 
@@ -140,7 +140,7 @@ export default function DocumentScrollSequence() {
               Problem Statement 26117 // Sovereign On-Premise AI
             </span>
             <h1 className="font-display font-bold text-5xl md:text-7xl text-white tracking-tight drop-shadow-lg shadow-black">
-              Sovereign Enclave
+              FORGE
             </h1>
             <p className="max-w-xl text-white/90 text-base md:text-lg mt-4 leading-relaxed font-sans mb-8 drop-shadow-md text-center">
               Air-gapped document intelligence. Zero egress to external networks, fully contained on-premise.

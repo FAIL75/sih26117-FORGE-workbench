@@ -26,7 +26,7 @@ print(f"95th Percentile (Best): \${result[2]:,.2f}")`;
 
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  const handleQuery = async (e: React.FormEvent) => {
+const handleQuery = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim() || phase !== 'idle') return;
 
@@ -34,35 +34,43 @@ print(f"95th Percentile (Best): \${result[2]:,.2f}")`;
     setStreamedCode("");
     setTerminalOut([]);
 
-    // Phase 1: AI writes the code (Streaming)
-    for (let i = 0; i <= pythonScript.length; i += 3) {
-      setStreamedCode(pythonScript.substring(0, i));
-      await sleep(10); 
+    try {
+      // 1. Send the prompt to your actual FastAPI backend
+      const response = await fetch("http://localhost:8000/api/task", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: query }),
+      });
+
+      const data = await response.json();
+
+      if (data.status === "success") {
+        // 2. Transition through the UI states to maintain the "Proof Through Motion"
+        setPhase('locking');
+        await sleep(1000); // Brief pause for visual effect
+
+        setPhase('executing');
+        setTerminalOut(prev => [...prev, `$ docker run --network none --rm -v $(pwd):/app python:3.11-slim python /app/task.py`]);
+        await sleep(800);
+
+        // 3. Display the actual output from the Docker container!
+        setTerminalOut(prev => [
+          ...prev, 
+          `> ${data.response}`,
+          "Process exited with code 0."
+        ]);
+
+        setPhase('complete');
+      } else {
+        throw new Error(data.message || "Backend execution failed");
+      }
+
+    } catch (error) {
+      console.error("Air-gap connection error:", error);
+      setTerminalOut(prev => [...prev, `[Fatal]: Connection to secure node BOM-01 failed. Is FastAPI running?`]);
+      setPhase('idle');
     }
-    
-    await sleep(500);
-
-    // Phase 2: Locking the Sandbox
-    setPhase('locking');
-    await sleep(1500);
-
-    // Phase 3: Executing in Terminal
-    setPhase('executing');
-    setTerminalOut(prev => [...prev, "$ docker run --network none --rm -v $(pwd):/app python:3.9 python /app/calc.py"]);
-    await sleep(800);
-    setTerminalOut(prev => [...prev, "> Starting Monte Carlo generation (10,000 paths)..."]);
-    await sleep(1200);
-    setTerminalOut(prev => [
-      ...prev, 
-      "> 5th Percentile (Worst): $184,320.15",
-      "> 50th Percentile (Median): $761,235.90",
-      "> 95th Percentile (Best): $3,145,890.45",
-      "Process exited with code 0."
-    ]);
-
-    setPhase('complete');
   };
-
   const isLocked = phase === 'locking' || phase === 'executing' || phase === 'complete';
 
   return (

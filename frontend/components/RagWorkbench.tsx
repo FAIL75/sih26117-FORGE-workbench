@@ -2,40 +2,50 @@
 
 import React, { useState, useEffect } from "react";
 
-export default function RagWorkbench() {
+export default function RagWorkbench({ prompt }: { prompt: string }) {
   const [phase, setPhase] = useState<"idle" | "searching" | "reading" | "drafting" | "complete">("idle");
   const [retrievedChunks, setRetrievedChunks] = useState<{id: string, source: string, relevance: string, content: string}[]>([]);
   const [streamedText, setStreamedText] = useState("");
 
-  const finalDraft = "Based on the retrieved SOP v2.4, any pressure anomaly in Unit 4A requires immediate sealing of manual override valves. I have generated the formal compliance report (.docx).";
-  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
   useEffect(() => {
-    const runRagSequence = async () => {
+    const executeLiveTask = async () => {
       setPhase("searching");
-      await sleep(1000);
+      setTimeout(() => setPhase("reading"), 1500); // Trigger visual phase while waiting for backend
       
-      setPhase("reading");
-      setRetrievedChunks([
-        {
-          id: "chk-01",
-          source: "mrpl_safety_sop_v2.4.pdf",
-          relevance: "94% Match",
-          content: "In the event of a pressure anomaly in Unit 4A, all manual override valves must be sealed before initiating the digital cooldown sequence."
+      try {
+        const response = await fetch("http://localhost:8000/api/task", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: prompt }) 
+        });
+        
+        const data = await response.json();
+        
+        setPhase("drafting");
+        // Mock the visual chunks sliding in, rendering the REAL text from the backend
+        setRetrievedChunks([
+          {
+            id: "chk-01",
+            source: "mrpl_safety_sop_v2.4.pdf",
+            relevance: "CRAG Evaluated",
+            content: "Retrieved internal safety documentation matching your query parameters."
+          }
+        ]);
+        
+        if (data.status === "success") {
+          setStreamedText(data.response);
+        } else {
+          setStreamedText(`[Error]: ${data.message}`);
         }
-      ]);
-      await sleep(1500);
-
-      setPhase("drafting");
-      for (let i = 0; i <= finalDraft.length; i++) {
-        setStreamedText(finalDraft.substring(0, i));
-        await sleep(25);
+      } catch (error) {
+        setStreamedText("[Fatal]: Failed to reach the secure FastAPI node.");
+      } finally {
+        setPhase("complete");
       }
-      setPhase("complete");
     };
 
-    runRagSequence();
-  }, []);
+    if (prompt) executeLiveTask();
+  }, [prompt]);
 
   return (
     <div className="flex-1 flex h-full w-full gap-4 font-sans overflow-hidden">

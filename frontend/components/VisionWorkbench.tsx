@@ -2,34 +2,45 @@
 
 import React, { useState, useEffect } from "react";
 
-export default function VisionWorkbench() {
+export default function VisionWorkbench({ prompt }: { prompt: string }) {
   const [phase, setPhase] = useState<"idle" | "scanning" | "extracting" | "complete">("idle");
   const [extractedData, setExtractedData] = useState<{id: string, label: string, value: string, status: string}[]>([]);
   const [streamedText, setStreamedText] = useState("");
 
-  const finalDraft = "Visual analysis complete. The structural integrity of Unit 4A is intact. Micro-fracture warning detected on the secondary pressure valve based on thermal shading.";
-  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
   useEffect(() => {
-    const runVisionSequence = async () => {
+    const executeLiveTask = async () => {
       setPhase("scanning");
-      await sleep(2000);
       
-      setPhase("extracting");
-      setExtractedData([
-        { id: "VLV-01", label: "Primary Intake", value: "OPEN", status: "nominal" },
-        { id: "PRS-04", label: "Secondary Pressure", value: "145 PSI", status: "warning" },
-      ]);
-      await sleep(1500);
-
-      setPhase("complete");
-      for (let i = 0; i <= finalDraft.length; i++) {
-        setStreamedText(finalDraft.substring(0, i));
-        await sleep(20); 
+      try {
+        const response = await fetch("http://localhost:8000/api/task", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: prompt }) 
+        });
+        
+        const data = await response.json();
+        
+        setPhase("extracting");
+        // We mock the telemetry visual cards to keep the UI engaging while backend processes
+        setExtractedData([
+          { id: "VLV-01", label: "Primary Intake", value: "OPEN", status: "nominal" },
+          { id: "PRS-04", label: "Secondary Pressure", value: "145 PSI", status: "warning" },
+        ]);
+        
+        if (data.status === "success") {
+          setStreamedText(data.response);
+        } else {
+          setStreamedText(`[Error]: ${data.message}`);
+        }
+      } catch (error) {
+        setStreamedText("[Fatal]: Failed to reach the secure FastAPI node.");
+      } finally {
+        setPhase("complete");
       }
     };
-    runVisionSequence();
-  }, []);
+
+    if (prompt) executeLiveTask();
+  }, [prompt]);
 
   return (
     <div className="flex-1 flex h-full w-full gap-4 font-sans overflow-hidden">

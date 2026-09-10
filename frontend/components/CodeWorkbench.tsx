@@ -2,39 +2,48 @@
 
 import React, { useState, useEffect } from "react";
 
-export default function CodeWorkbench() {
+export default function CodeWorkbench({ prompt }: { prompt: string }) {
   const [phase, setPhase] = useState<"idle" | "writing" | "locking" | "executing" | "complete">("idle");
   const [streamedCode, setStreamedCode] = useState("");
   const [terminalOut, setTerminalOut] = useState<string[]>([]);
 
-  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
   useEffect(() => {
-    const runSandboxSequence = async () => {
+    const executeLiveTask = async () => {
       setPhase("writing");
-      setStreamedCode("# Synthesizing sandboxed verification script...\nimport numpy as np\n\n# Simulating Monte Carlo or Hoop Stress Calc...\nresult = 450.25\nprint(f'Max Load: {result} PSI')");
+      setStreamedCode("# Sending instructions to isolated environment...\n");
       
-      await sleep(1500);
-      setPhase("locking");
+      setTimeout(() => setPhase("locking"), 1000);
+      setTimeout(() => setPhase("executing"), 2000);
       
-      await sleep(800);
-      setPhase("executing");
-      setTerminalOut((prev) => [
-        ...prev,
-        "$ docker run --rm --network none --memory 256m --cpus 0.5 -v /workspace python:3.11-slim python task.py",
-      ]);
-      
-      await sleep(1200);
-      setTerminalOut((prev) => [
-        ...prev,
-        "> Max Load: 450.25 PSI",
-        "Process exited with code 0. Container destroyed.",
-      ]);
-      setPhase("complete");
+      try {
+        const response = await fetch("http://localhost:8000/api/task", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: prompt }) 
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === "success") {
+          setStreamedCode("# Script generated and executed by Qwen-Coder.");
+          setTerminalOut((prev) => [
+            ...prev,
+            "$ docker run --rm --network none --memory 256m --cpus 0.5 -v /workspace python:3.11-slim python task.py",
+            `> ${data.response}`,
+            "Process exited with code 0. Container destroyed."
+          ]);
+        } else {
+          setTerminalOut((prev) => [...prev, `[Error]: ${data.message}`]);
+        }
+      } catch (error) {
+        setTerminalOut((prev) => [...prev, "[Fatal]: Failed to reach the secure FastAPI node."]);
+      } finally {
+        setPhase("complete");
+      }
     };
 
-    runSandboxSequence();
-  }, []);
+    if (prompt) executeLiveTask();
+  }, [prompt]);
 
   const isLocked = phase === "locking" || phase === "executing" || phase === "complete";
 

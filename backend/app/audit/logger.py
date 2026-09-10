@@ -7,8 +7,14 @@ import hashlib
 from datetime import datetime
 from pathlib import Path
 
-# Define the absolute path to the air-gapped audit folder
-BASE_DIR = Path(__file__).resolve().parents[3] / "data" / "audit_logs"
+
+# Use /data if running inside Docker, otherwise navigate to project root on host
+if Path("/data").exists():
+    BASE_DIR = Path("/data/audit_logs")
+else:
+    BASE_DIR = Path(__file__).resolve().parents[2] / "data" / "audit_logs"
+
+BASE_DIR.mkdir(parents=True, exist_ok=True)
 
 def get_today_log_file() -> Path:
     """Returns the path for today's append-only JSONL log file."""

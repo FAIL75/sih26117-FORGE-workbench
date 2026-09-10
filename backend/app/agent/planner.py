@@ -2,8 +2,7 @@ import json
 from openai import OpenAI
 from audit.logger import log_event, generate_session_id # <--- NEW IMPORT
 
-client = OpenAI(base_url="http://localhost:11434/v1", api_key="sih-local-key")
-
+client = OpenAI(base_url="http://host.docker.internal:11434/v1", api_key="sih-local-key")
 def run_agent_loop(user_prompt: str, tools_schema: list, available_functions: dict, model_name: str = "qwen2.5:3b", max_steps: int = 5):
     session_id = generate_session_id() # <--- NEW
     

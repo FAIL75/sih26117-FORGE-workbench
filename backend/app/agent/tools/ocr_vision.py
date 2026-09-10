@@ -3,7 +3,7 @@ import base64
 import yaml
 from openai import OpenAI
 
-client = OpenAI(base_url="http://localhost:11434/v1", api_key="sih-local-key")
+client = OpenAI(base_url="http://host.docker.internal:11434/v1", api_key="sih-local-key")
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..", "data", "uploads"))
 
 def get_vision_model() -> str:

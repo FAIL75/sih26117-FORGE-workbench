@@ -25,11 +25,37 @@ export default function CodeWorkbench({ prompt }: { prompt: string }) {
         const data = await response.json();
         
         if (data.status === "success") {
-          setStreamedCode("# Script generated and executed by Qwen-Coder.");
+          const fullText = data.response || "";
+
+          // 1. Regex to extract code inside ```python ... ``` or ``` ... ```
+          const codeMatch = fullText.match(/```(?:python)?\s*([\s\S]*?)```/i);
+          
+          let extractedCode = "";
+          let cleanNotes = fullText;
+
+          if (codeMatch) {
+            extractedCode = codeMatch[1].trim();
+            // Remove the code block from the notes so text doesn't duplicate in terminal
+            cleanNotes = fullText.replace(codeMatch[0], "").trim();
+          } else {
+            // If the model didn't return markdown fences, display the raw response
+            extractedCode = "# Direct Model Execution Output:\n" + fullText;
+            cleanNotes = "Execution finished with status 0.";
+          }
+
+          // 2. Populate the top Code Editor pane dynamically
+          setStreamedCode(
+            `# Auto-Generated Sandbox Script (Qwen-Coder)\n` +
+            `# Environment: python:3.11-slim | Network: NONE\n\n` +
+            extractedCode
+          );
+
+          // 3. Populate the Terminal pane with real dynamic outputs
           setTerminalOut((prev) => [
             ...prev,
-            "$ docker run --rm --network none --memory 256m --cpus 0.5 -v /workspace python:3.11-slim python task.py",
-            `> ${data.response}`,
+            "$ docker run -i --rm --network none --memory 256m --cpus 0.5 python:3.11-slim python3 -",
+            // Print the model's analytical conclusion line by line
+            ...cleanNotes.split("\n").filter((line: string) => line.trim().length > 0).map((line: string) => `> ${line}`),
             "Process exited with code 0. Container destroyed."
           ]);
         } else {

@@ -56,6 +56,16 @@ function OmniWorkbenchCore() {
     return () => clearTimeout(timer);
   }, [phase, currentFrame]);
 
+  // --- RESET LOGIC ---
+  const handleReset = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setPhase("idle");
+    setPrompt("");
+    setActiveModule("chat");
+    setTelemetryLogs((prev) => [...prev, "[System] VRAM cleared. Awaiting new instructions..."]);
+    setCurrentFrame(9); // Resets the vault animation to the beginning
+  };
+
   // --- AGENT ROUTING LOGIC ---
   const handleExecute = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -64,7 +74,7 @@ function OmniWorkbenchCore() {
     setPhase("routing");
     setTelemetryLogs((prev) => [...prev, "[System] Initializing Qwen-0.5B Router..."]);
     
-    // Simulate routing delay for the demo narrative
+    // Simulate routing delay for the demo narrative before mounting the live component
     setTimeout(() => {
       const q = prompt.toLowerCase();
       let route: "rag" | "vision" | "code" = "rag";
@@ -80,13 +90,13 @@ function OmniWorkbenchCore() {
       
       setActiveModule(route);
       setPhase("processing");
-
-      // In a real scenario, the sub-component (Vision/Code) finishes and calls a callback.
-      // For this master wrapper, we simulate the module finishing after 8 seconds.
+      
+      // The child component now handles its own API call and will trigger completion visually
+      // We simulate the sidebar catching the completion after an estimated wait for the demo flow
       setTimeout(() => {
         setPhase("complete");
         setTelemetryLogs((prev) => [...prev, "[System] Task complete. Securing data in vault."]);
-      }, 8000);
+      }, 15000); 
 
     }, 1500);
   };
@@ -156,28 +166,45 @@ function OmniWorkbenchCore() {
                 FORGE Secure Terminal Ready. Awaiting Instruction...
               </div>
             )}
-            {activeModule === "rag" && <RagWorkbench />}
-            {activeModule === "vision" && <VisionWorkbench />}
-            {activeModule === "code" && <CodeWorkbench />}
+            {activeModule === "rag" && <RagWorkbench prompt={prompt} />}
+            {activeModule === "vision" && <VisionWorkbench prompt={prompt} />}
+            {activeModule === "code" && <CodeWorkbench prompt={prompt} />}
           </div>
 
           {/* Master Input Bar */}
-          <form onSubmit={handleExecute} className="p-4 border-t border-line bg-panel shrink-0 flex gap-3">
+          <form 
+            onSubmit={(e) => { 
+              e.preventDefault(); 
+              phase === "complete" ? handleReset() : handleExecute(); 
+            }} 
+            className="p-4 border-t border-line bg-panel shrink-0 flex gap-3"
+          >
             <input
               type="text"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              disabled={phase !== "idle"}
+              disabled={phase === "routing" || phase === "processing"} 
               placeholder="Enter a secure task prompt..."
               className="flex-1 bg-base border border-line rounded-lg px-4 py-3 text-sm text-primary placeholder-muted2 font-mono focus:outline-none focus:border-copper transition-colors disabled:opacity-50"
             />
-            <button
-              type="submit"
-              disabled={!prompt.trim() || phase !== "idle"}
-              className="bg-copper hover:bg-copper/90 text-base font-mono font-semibold px-6 py-3 rounded-lg text-xs transition-colors disabled:opacity-40"
-            >
-              EXECUTE
-            </button>
+            
+            {phase === "complete" ? (
+              <button
+                type="button"
+                onClick={handleReset}
+                className="bg-riskLow/20 border border-riskLow text-riskLow hover:bg-riskLow/30 font-mono font-semibold px-6 py-3 rounded-lg text-xs transition-colors"
+              >
+                NEW TASK
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={!prompt.trim() || phase !== "idle"}
+                className="bg-copper hover:bg-copper/90 text-base font-mono font-semibold px-6 py-3 rounded-lg text-xs transition-colors disabled:opacity-40"
+              >
+                EXECUTE
+              </button>
+            )}
           </form>
         </section>
 

@@ -3,8 +3,7 @@ import yaml
 from openai import OpenAI
 from .swap_manager import load_model, unload_model
 
-client = OpenAI(base_url="http://localhost:11434/v1", api_key="sih-local-key")
-
+client = OpenAI(base_url="http://host.docker.internal:11434/v1", api_key="sih-local-key")
 def load_registry():
     # Load the dev profile YAML
     registry_path = os.path.join(os.path.dirname(__file__), "registries", "registry.dev.yaml")

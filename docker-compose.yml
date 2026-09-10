@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: forge-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount the codebase so live changes reflect immediately
+      - ./backend/app:/app
+      # Mount data and knowledge base folders for the DB and file I/O
+      - ./data:/data
+      - ./knowledge_base:/knowledge_base
+      # CRITICAL: Mount the Docker socket so the backend can launch the secure sandboxes!
+      - //var/run/docker.sock:/var/run/docker.sock
+    extra_hosts:
+      # Allows the backend container to talk to your Windows host's Ollama instance
+      - "host.docker.internal:host-gateway"
+    environment:
+      - PYTHONUNBUFFERED=1
+      # Note: Since the backend runs in a container, it needs to look for Ollama on the host machine.
+      - OLLAMA_URL=http://host.docker.internal:11434
+
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: forge-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount frontend code for hot-reloading
+      - ./frontend:/app
+      # Prevent host node_modules from overriding the container's modules
+      - /app/node_modules
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend

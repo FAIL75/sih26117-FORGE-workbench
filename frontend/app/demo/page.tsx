@@ -18,6 +18,18 @@ function OmniWorkbenchCore() {
   const [activeModule, setActiveModule] = useState<"chat" | "rag" | "vision" | "code">("chat");
   const [telemetryLogs, setTelemetryLogs] = useState<string[]>([]);
   
+  // --- UPLOAD STATE ---
+  const [attachedFile, setAttachedFile] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const fileName = e.target.files[0].name;
+      setAttachedFile(fileName);
+      setTelemetryLogs((prev) => [...prev, `[System] File securely staged for analysis: ${fileName}`]);
+    }
+  };
+
   // --- ANIMATION STATE ---
   const [images, setImages] = useState<HTMLImageElement[]>([]);
   const [currentFrame, setCurrentFrame] = useState(9); // Start frame (skipping black intro)
@@ -62,6 +74,7 @@ function OmniWorkbenchCore() {
     setPhase("idle");
     setPrompt("");
     setActiveModule("chat");
+    setAttachedFile(null); // Clears the upload pill
     setTelemetryLogs((prev) => [...prev, "[System] VRAM cleared. Awaiting new instructions..."]);
     setCurrentFrame(9); // Resets the vault animation to the beginning
   };
@@ -79,8 +92,12 @@ function OmniWorkbenchCore() {
       const q = prompt.toLowerCase();
       let route: "rag" | "vision" | "code" = "rag";
       
-      if (q.match(/\b(scan|image|schematic|visual|p&id)\b/)) route = "vision";
-      else if (q.match(/\b(calculate|math|code|simulate)\b/)) route = "code";
+      // If a user uploaded an image, explicitly force the vision route just in case
+      if (q.match(/\b(scan|image|schematic|visual|p&id)\b/) || (attachedFile && attachedFile.match(/\.(png|jpe?g)$/i))) {
+        route = "vision";
+      } else if (q.match(/\b(calculate|math|code|simulate)\b/)) {
+        route = "code";
+      }
 
       setTelemetryLogs((prev) => [
         ...prev, 
@@ -179,14 +196,44 @@ function OmniWorkbenchCore() {
             }} 
             className="p-4 border-t border-line bg-panel shrink-0 flex gap-3"
           >
-            <input
-              type="text"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              disabled={phase === "routing" || phase === "processing"} 
-              placeholder="Enter a secure task prompt..."
-              className="flex-1 bg-base border border-line rounded-lg px-4 py-3 text-sm text-primary placeholder-muted2 font-mono focus:outline-none focus:border-copper transition-colors disabled:opacity-50"
-            />
+            
+            {/* Master Input Wrapper with Upload Button */}
+            <div className={`flex-1 bg-base border border-line rounded-lg flex items-center px-2 transition-colors focus-within:border-copper ${phase !== "idle" ? "opacity-50" : ""}`}>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={phase !== "idle"}
+                className="p-2 text-muted hover:text-copper transition-colors"
+                title="Securely upload file"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                </svg>
+              </button>
+              
+              <input 
+                type="file" 
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                className="hidden" 
+              />
+              
+              {attachedFile && (
+                <div className="flex items-center gap-1 bg-panel border border-line px-2 py-1 mx-2 rounded text-[10px] font-mono text-copper shrink-0">
+                  📄 {attachedFile}
+                  <button type="button" onClick={() => setAttachedFile(null)} className="ml-1 hover:text-white transition-colors">✕</button>
+                </div>
+              )}
+              
+              <input
+                type="text"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                disabled={phase !== "idle"} 
+                placeholder="Enter a secure task prompt..."
+                className="flex-1 bg-transparent border-none px-2 py-3 text-sm text-primary placeholder-muted2 font-mono focus:outline-none focus:ring-0"
+              />
+            </div>
             
             {phase === "complete" ? (
               <button

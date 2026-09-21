@@ -12,12 +12,13 @@ def run_agent_loop(user_prompt: str, tools_schema: list, available_functions: di
     system_prompt = (
         "You are a specialized agent. You MUST use the tools provided to you. "
         "If you need to calculate math or process data, call 'execute_python_code'. "
-        "CRITICAL RULE: Code run via execute_python_code is fully isolated — it CANNOT call write_file, "
+        "CRITICAL RULE 1: Code run via execute_python_code is fully isolated — it CANNOT call write_file, "
         "read_file, or any other tool. It can only use standard Python and print() its output. "
         "To save a result to a file, first compute it in execute_python_code, read the printed output, "
-        "and then call write_file as a SEPARATE tool call with that result."
+        "and then call write_file as a SEPARATE tool call with that result. "
+        "CRITICAL RULE 2 (AUTO-CORRECTION): If execute_python_code returns a Traceback, SyntaxError, or Exception, "
+        "you MUST analyze the error log, correct your Python script, and call execute_python_code again until it succeeds."
     )
-    
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt}

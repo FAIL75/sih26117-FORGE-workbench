@@ -39,8 +39,23 @@ def run_agent_loop(user_prompt: str, tools_schema: list, available_functions: di
         
         if not ai_message.tool_calls:
             log_event(session_id, "FINAL_ANSWER", "Agent completed task", {"content": ai_message.content})
-            return ai_message.content if ai_message.content else "[Warning: Blank response]"
-
+            
+            # Extract the actual code that was successfully executed
+            last_code = None
+            for msg in messages:
+                if hasattr(msg, "tool_calls") and msg.tool_calls:
+                    for tc in msg.tool_calls:
+                        if tc.function.name == "execute_python_code":
+                            try:
+                                args_dict = json.loads(tc.function.arguments)
+                                last_code = args_dict.get("code")
+                            except Exception:
+                                pass
+                                
+            return {
+                "text": ai_message.content if ai_message.content else "[Warning: Blank response]",
+                "executed_code": last_code
+            }
         messages.append(ai_message)
 
         for tool_call in ai_message.tool_calls:

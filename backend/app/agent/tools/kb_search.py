@@ -7,7 +7,7 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../.."
 
 model = None
 collection = None
-client = OpenAI(base_url="http://localhost:11434/v1", api_key="sih-local-key")
+client = OpenAI(base_url="http://host.docker.internal:11434/v1", api_key="sih-local-key")
 
 def init_db():
     global model, collection

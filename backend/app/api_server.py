@@ -43,16 +43,25 @@ def submit_task(request: TaskRequest):
     try:
         # 1. Dynamically choose the best model for the task
         chosen_model = get_best_model_for_prompt(request.prompt)
-        
-        # 2. Execute the agent loop with the centralized tool schema
-        final_response = run_agent_loop(
+# 2.    Execute the agent loop with the centralized tool schema
+        agent_result = run_agent_loop(
             user_prompt=request.prompt,
             tools_schema=TOOLS_SCHEMA,
             available_functions=AVAILABLE_FUNCTIONS,
             model_name=chosen_model
         )
         
-        return {"status": "success", "response": final_response, "model_used": chosen_model}
+        # Handle the new dictionary response format
+        if isinstance(agent_result, dict):
+            return {
+                "status": "success", 
+                "response": agent_result["text"], 
+                "executed_code": agent_result["executed_code"],
+                "model_used": chosen_model
+            }
+        else:
+            # Fallback in case of a max_steps string error
+            return {"status": "success", "response": agent_result, "model_used": chosen_model}
     
     except Exception as e:
         return {"status": "error", "message": str(e)}
